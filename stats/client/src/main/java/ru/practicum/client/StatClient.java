@@ -38,8 +38,8 @@ public class StatClient {
                     .toBodilessEntity();
             log.info("Сохранение статистики для {}", hitDto);
             return response;
-        } catch (RestClientException e) {
-            log.error("Ошибка выполнения запроса post сервером статистики для запроса {} : {}, трассировка:", hitDto, e.getMessage(), e);
+        } catch (RestClientException exception) {
+            log.error("Ошибка выполнения запроса post сервером статистики для запроса {} : {}, трассировка:", hitDto, exception.getMessage(), exception);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -53,10 +53,10 @@ public class StatClient {
                     });
             log.info("Выполнен запрос GET с параметрами start={}, end={}, uris={}, unique={}:", start, end, uris, unique);
             return response;
-        } catch (RestClientException e) {
+        } catch (RestClientException exception) {
             log.error("Ошибка выполнения запроса GET на сервер статистики с параметрами start={}, " +
                             "end={}, uris={}, unique={}: {}, трассировка:", start, end, uris, unique,
-                    e.getMessage(), e);
+                    exception.getMessage(), exception);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.emptyList());
         }
     }
