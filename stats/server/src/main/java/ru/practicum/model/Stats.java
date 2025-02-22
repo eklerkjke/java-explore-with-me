@@ -22,6 +22,5 @@ public class Stats {
     String app;
     String uri;
     String ip;
-    @Column(name = "time_stamp")
     LocalDateTime timestamp;
 }
