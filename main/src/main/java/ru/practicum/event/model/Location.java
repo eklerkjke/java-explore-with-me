@@ -2,6 +2,7 @@ package ru.practicum.event.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Getter
 @Setter
@@ -10,6 +11,7 @@ import lombok.*;
 @Table(name = "locations")
 @AllArgsConstructor
 @NoArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Location {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -100,10 +100,8 @@ public class RequestServiceImpl implements RequestService {
         List<ParticipationRequestDto> confirmed = new ArrayList<>();
         List<ParticipationRequestDto> rejected = new ArrayList<>();
 
-        for (Request request : foundRequests) {
-            if (!request.getStatus().equals(RequestStatus.PENDING)) {
-                throw new ConditionsNotMetException("Заявка должна находиться в ожидании");
-            }
+        if (foundRequests.stream().anyMatch(request -> !request.getStatus().equals(RequestStatus.PENDING))) {
+            throw new ConditionsNotMetException("Заявка должна находиться в ожидании");
         }
 
         switch (updateRequest.getStatus()) {

@@ -4,7 +4,6 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.compilation.dto.CompilationDto;
 import ru.practicum.compilation.service.CompilationService;
@@ -20,16 +19,18 @@ public class PublicCompilationController {
     private final CompilationService compilationService;
 
     @GetMapping
-    public ResponseEntity<List<CompilationDto>> getCompilations(
+    @ResponseStatus(HttpStatus.OK)
+    public List<CompilationDto> getCompilations(
             @RequestParam(required = false) Boolean pinned,
             @RequestParam(defaultValue = Constants.DEFAULT_PAGE_FROM) @PositiveOrZero Integer from,
             @RequestParam(defaultValue = Constants.DEFAULT_PAGE_SIZE) @Positive Integer size
     ) {
-        return ResponseEntity.status(HttpStatus.OK).body(compilationService.getAll(pinned, from, size));
+        return compilationService.getAll(pinned, from, size);
     }
 
     @GetMapping("/{compId}")
-    public ResponseEntity<CompilationDto> getCompilation(@PathVariable Long compId) {
-        return ResponseEntity.status(HttpStatus.OK).body(compilationService.get(compId));
+    @ResponseStatus(HttpStatus.OK)
+    public CompilationDto getCompilation(@PathVariable Long compId) {
+        return compilationService.get(compId);
     }
 }

@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.category.dto.CategoryDto;
 import ru.practicum.category.service.CategoryService;
+import ru.practicum.util.Constants;
 
 import java.util.List;
 
@@ -17,9 +18,9 @@ public class PublicCategoryController {
 
     @GetMapping
     public List<CategoryDto> getAllCategories(
-            @RequestParam(name = "from", defaultValue = "0")
+            @RequestParam(name = Constants.REQ_PARAM_FROM, defaultValue = Constants.DEFAULT_PAGE_FROM)
             @PositiveOrZero Integer from,
-            @RequestParam(name = "size", defaultValue = "10")
+            @RequestParam(name = Constants.REQ_PARAM_SIZE, defaultValue = Constants.DEFAULT_PAGE_SIZE)
             @Positive Integer size
     ) {
         return categoryService.getAllCategories(from, size);

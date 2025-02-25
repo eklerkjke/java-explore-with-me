@@ -4,7 +4,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.category.service.CategoryService;
@@ -24,7 +23,6 @@ import ru.practicum.user.service.UserService;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 
 
 @Service
@@ -36,22 +34,23 @@ public class EventServiceImpl implements EventService {
     private final CategoryService categoryService;
     private final UserService userService;
     private final ViewService viewService;
-    private final EventMapper mp;
-    private final LocationMapper lmp;
+    private final EventMapper eventMapper;
+    private final LocationMapper locationMapper;
+    private final EventSpecification eventSpecification;
 
     @Transactional
     @Override
     public EventFullDto addEvent(Long userId, NewEventDto newEventDto) {
-        Event ev = mp.toEntity(newEventDto);
-        ev.setCategory(categoryService.getCategory(ev.getCategory().getId()));
-        ev.setInitiator(userService.getUserById(userId));
-        return mp.toEventFullDto(eventRepository.save(ev));
+        Event event = eventMapper.toEntity(newEventDto);
+        event.setCategory(categoryService.getCategory(event.getCategory().getId()));
+        event.setInitiator(userService.getUserById(userId));
+        return eventMapper.toEventFullDto(eventRepository.save(event));
     }
 
     @Override
     public List<EventShortDto> getEventsForUser(Long userId, Integer from, Integer size) {
         List<Event> events = eventRepository.findAllByInitiatorId(userId, PageRequest.of(from / size, size));
-        return mp.toEventShortDto(events);
+        return eventMapper.toEventShortDto(events);
     }
 
     @Override
@@ -64,7 +63,7 @@ public class EventServiceImpl implements EventService {
                                 eventId, userId
                         )
                 ));
-        return mp.toEventFullDto(event);
+        return eventMapper.toEventFullDto(event);
     }
 
     @Override
@@ -77,83 +76,71 @@ public class EventServiceImpl implements EventService {
             Integer from,
             Integer size
     ) {
-        Specification<Event> specification = Specification.where(null);
-
-        if (users != null && !users.isEmpty()) {
-            specification = specification.and(
-                    (root, query, criteriaBuilder) -> root.get("initiator").get("id").in(users)
-            );
-        }
-        if (states != null && !states.isEmpty()) {
-            specification = specification.and((root, query, criteriaBuilder) ->
-                    root.get("state").as(String.class).in(states));
-        }
-        if (categories != null && !categories.isEmpty()) {
-            specification = specification.and((root, query, criteriaBuilder) ->
-                    root.get("category").get("id").in(categories));
-        }
         if (rangeStart != null && rangeEnd != null) {
             dateValid(rangeStart, rangeEnd);
-
-            specification = specification.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.greaterThanOrEqualTo(root.get("eventDate"), rangeStart));
-
-            specification = specification.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.lessThanOrEqualTo(root.get("eventDate"), rangeEnd));
         }
 
-        List<Event> events = eventRepository.findAll(specification, PageRequest.of(from / size, size));
+        List<Event> events = eventRepository.findAll(
+                eventSpecification.buildForAdmin(
+                        users,
+                        states,
+                        categories,
+                        rangeStart,
+                        rangeEnd
+                ),
+                PageRequest.of(from / size, size)
+        );
 
-        return mp.toEventFullDto(events);
+        return eventMapper.toEventFullDto(events);
     }
 
     @Override
     @Transactional
-    public EventFullDto updateEventByAdmin(Long id, UpdateEventAdminRequest rq) {
-        Event ev = eventRepository.findById(id)
+    public EventFullDto updateEventByAdmin(Long id, UpdateEventAdminRequest request) {
+        Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(
                         String.format("Событие с id %d не найдено.", id)));
-        if ((rq.getStateAction() == StateAction.PUBLISH_EVENT && ev.getState() != State.PENDING) ||
-                (rq.getStateAction() == StateAction.REJECT_EVENT && ev.getState() == State.PUBLISHED)) {
+        if ((request.getStateAction() == StateAction.PUBLISH_EVENT && event.getState() != State.PENDING) ||
+                (request.getStateAction() == StateAction.REJECT_EVENT && event.getState() == State.PUBLISHED)) {
             throw new ConflictStateException(
-                    (rq.getStateAction() == StateAction.PUBLISH_EVENT) ?
+                    (request.getStateAction() == StateAction.PUBLISH_EVENT) ?
                             "Невозможно опубликовать событие, так как текущий статус не PENDING"
                             : "Нельзя отменить публикацию, так как событие уже опубликовано");
         }
-        ev.setState(State.CANCELED);
-        if (rq.getLocation() != null) {
-            Location sLk = locationService.getLocation(lmp.toLocation(rq.getLocation()));
-            ev.setLocation(sLk);
+        event.setState(State.CANCELED);
+        if (request.getLocation() != null) {
+            Location sLk = locationService.getLocation(locationMapper.toLocation(request.getLocation()));
+            event.setLocation(sLk);
         }
-        mp.updateFromAdmin(rq, ev);
-        ev.setState(rq.getStateAction() == StateAction.PUBLISH_EVENT ? State.PUBLISHED : State.CANCELED);
-        return mp.toEventFullDto(eventRepository.save(ev));
+        eventMapper.updateFromAdmin(request, event);
+        event.setState(request.getStateAction() == StateAction.PUBLISH_EVENT ? State.PUBLISHED : State.CANCELED);
+        return eventMapper.toEventFullDto(eventRepository.save(event));
     }
 
     @Override
     @Transactional
-    public EventFullDto updateEventByUser(Long userId, Long eventId, UpdateEventUserRequest rq) {
-        if (rq.getEventDate() != null && rq.getEventDate().isBefore(LocalDateTime.now().plusHours(2L))) {
+    public EventFullDto updateEventByUser(Long userId, Long eventId, UpdateEventUserRequest request) {
+        if (request.getEventDate() != null && request.getEventDate().isBefore(LocalDateTime.now().plusHours(2L))) {
             throw new ConflictTimeException("Время не может быть раньше, через два часа от текущего момента");
         }
-        Event ev = eventRepository.findByIdAndInitiatorId(eventId, userId)
+        Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException(
                         String.format("Событие с id %d для пользователя с id %d не найдено.", eventId, userId)));
-        if (ev.getState() == State.PUBLISHED) {
+        if (event.getState() == State.PUBLISHED) {
             throw new ConflictStateException("Изменить можно только неопубликованное событие");
         }
-        if (rq.getStateAction() != null) {
-            switch (rq.getStateAction()) {
-                case SEND_TO_REVIEW -> ev.setState(State.PENDING);
-                case CANCEL_REVIEW -> ev.setState(State.CANCELED);
-                default -> throw new IllegalArgumentException("Неизвестный статус: " + rq.getStateAction());
+        if (request.getStateAction() != null) {
+            switch (request.getStateAction()) {
+                case SEND_TO_REVIEW -> event.setState(State.PENDING);
+                case CANCEL_REVIEW -> event.setState(State.CANCELED);
+                default -> throw new IllegalArgumentException("Неизвестный статус: " + request.getStateAction());
             }
         }
-        if (rq.getLocation() != null) {
-            ev.setLocation(locationService.getLocation(lmp.toLocation(rq.getLocation())));
+        if (request.getLocation() != null) {
+            event.setLocation(locationService.getLocation(locationMapper.toLocation(request.getLocation())));
         }
-        mp.updateFromUser(rq, ev);
-        return mp.toEventFullDto(eventRepository.save(ev));
+        eventMapper.updateFromUser(request, event);
+        return eventMapper.toEventFullDto(eventRepository.save(event));
     }
 
     @Override
@@ -172,37 +159,6 @@ public class EventServiceImpl implements EventService {
     ) {
         dateValid(rangeStart, rangeEnd);
 
-        Specification<Event> specification = Specification.where(null);
-        if (text != null) {
-            specification = specification.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.or(
-                            criteriaBuilder.like(criteriaBuilder.lower(root.get("annotation")), "%" + text.toLowerCase() + "%"),
-                            criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), "%" + text.toLowerCase() + "%")
-                    ));
-        }
-        if (categories != null) {
-            specification = specification.and((root, query, criteriaBuilder) ->
-                    root.get("category").get("id").in(categories));
-        }
-        if (paid != null) {
-            specification = specification.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.equal(root.get("paid"), paid));
-        }
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime startDateTime = Objects.requireNonNullElseGet(rangeStart, () -> now);
-        specification = specification.and((root, query, criteriaBuilder) ->
-                criteriaBuilder.greaterThan(root.get("eventDate"), startDateTime));
-        if (rangeEnd != null) {
-            specification = specification.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.lessThan(root.get("eventDate"), rangeEnd));
-        }
-        if (onlyAvailable != null && onlyAvailable) {
-            specification = specification.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.greaterThanOrEqualTo(root.get("participantLimit"), 0));
-        }
-
-        specification = specification.and((root, query, criteriaBuilder) ->
-                criteriaBuilder.equal(root.get("state"), State.PUBLISHED));
         PageRequest pageRequest;
         switch (sort) {
             case "EVENT_DATE":
@@ -214,16 +170,26 @@ public class EventServiceImpl implements EventService {
             default:
                 throw new jakarta.validation.ValidationException("Unknown sort: " + sort);
         }
-        List<Event> events = eventRepository.findAll(specification, pageRequest);
+        List<Event> events = eventRepository.findAll(
+                eventSpecification.buildForPublic(
+                        text,
+                        categories,
+                        paid,
+                        rangeStart,
+                        rangeEnd,
+                        onlyAvailable
+                ),
+                pageRequest
+        );
 
         viewService.saveViews(events, request);
 
-        return mp.toEventShortDto(events);
+        return eventMapper.toEventShortDto(events);
     }
 
     @Override
     @Transactional
-    public EventFullDto getPublicEventById(Long id, HttpServletRequest rqt) {
+    public EventFullDto getPublicEventById(Long id, HttpServletRequest request) {
         Event event = eventRepository.findById(id).orElseThrow(() ->
                 new NotFoundException("Event with id=" + id + " was not found"));
 
@@ -231,8 +197,8 @@ public class EventServiceImpl implements EventService {
             throw new NotFoundException("Event must be published.");
         }
 
-        viewService.saveView(event, rqt);
-        return mp.toEventFullDto(event);
+        viewService.saveView(event, request);
+        return eventMapper.toEventFullDto(event);
     }
 
     @Override

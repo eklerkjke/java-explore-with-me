@@ -1,8 +1,10 @@
 package ru.practicum.compilation.model;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldDefaults;
 import ru.practicum.event.model.Event;
 
 import java.util.List;
@@ -11,6 +13,7 @@ import java.util.List;
 @Setter
 @Entity
 @Table(name = "compilations")
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Compilation {
 
     @Id
