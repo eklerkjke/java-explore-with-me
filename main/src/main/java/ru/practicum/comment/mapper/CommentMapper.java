@@ -14,7 +14,5 @@ public interface CommentMapper {
     @Mapping(target = "id", ignore = true)
     Comment toComment(NewCommentDto newCommentDto);
 
-    Comment toComment(CommentDto commentDto);
-
     CommentDto toCommentDto(Comment comment);
 }

@@ -91,6 +91,4 @@ CREATE TABLE IF NOT EXISTS comments (
     text TEXT NOT NULL,
     user_id BIGINT NOT NULL,
     timestamp TIMESTAMP NOT NULL,
-    CONSTRAINT fk_event_id FOREIGN KEY (event_id) REFERENCES events(id),
-    CONSTRAINT fk_user_id FOREIGN KEY (event_id) REFERENCES users(id)
 );
