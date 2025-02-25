@@ -22,95 +22,75 @@ public class ErrorHandler {
     public ErrorResponse handleNotFoundException(NotFoundException exception) {
         String nowTime = LocalDateTime.now().format(FORMATTER);
         HttpStatus status = HttpStatus.NOT_FOUND;
-        return getErrorResponse(status, "Объект не найден",
-                exception.getMessage(), nowTime);
+        return getErrorResponse(status, "Объект не найден", exception.getMessage());
     }
 
     // Перехватывает исключение из базы данных, при неверных параметрах в запросах
     @ExceptionHandler({DataIntegrityViolationException.class})
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleDataIntegrityViolationException(DataIntegrityViolationException exception) {
-        String nowTime = LocalDateTime.now().format(FORMATTER);
         HttpStatus status = HttpStatus.CONFLICT;
-
-        return getErrorResponse(status, "Нарушение целостности данных",
-                exception.getMessage(), nowTime);
+        return getErrorResponse(status, "Нарушение целостности данных", exception.getMessage());
     }
 
     // Перехватывает исключения при валидации с помощью jakarta.validation
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleMethodArgumentNotValidException(MethodArgumentNotValidException exception) {
-        String nowTime = LocalDateTime.now().format(FORMATTER);
         HttpStatus status = HttpStatus.BAD_REQUEST;
-
-        return getErrorResponse(status, "Запрос составлен некорректно",
-                exception.getMessage(), nowTime);
+        return getErrorResponse(status, "Запрос составлен некорректно", exception.getMessage());
     }
 
 
     @ExceptionHandler(DataAlreadyInUseException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleDataAlreadyInUseException(DataAlreadyInUseException exception) {
-        String nowTime = LocalDateTime.now().format(FORMATTER);
-        HttpStatus status = HttpStatus.CONFLICT; // возможно статус должен быть другим
+        HttpStatus status = HttpStatus.CONFLICT;
 
-        return getErrorResponse(status,
-                "Исключение, связанное с нарушением целостности данных", exception.getMessage(), nowTime);
+        return getErrorResponse(status, "Исключение, связанное с нарушением целостности данных", exception.getMessage());
     }
 
     @ExceptionHandler(ConflictStateException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleConflictEventStateException(ConflictStateException exception) {
-        String nowTime = LocalDateTime.now().format(FORMATTER);
         HttpStatus status = HttpStatus.CONFLICT;
-        return getErrorResponse(status,
-                "Исключение, связанное с конфликтом статуса события при изменении", exception.getMessage(), nowTime);
+        return getErrorResponse(status, "Исключение, связанное с конфликтом статуса события при изменении", exception.getMessage());
     }
 
     @ExceptionHandler(ConflictTimeException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleConflictEventTimeException(ConflictTimeException exception) {
-        String nowTime = LocalDateTime.now().format(FORMATTER);
         HttpStatus status = HttpStatus.CONFLICT;
-        return getErrorResponse(status,
-                "Исключение, связанное  с конфликтом времени события при изменении", exception.getMessage(), nowTime);
+        return getErrorResponse(status, "Исключение, связанное  с конфликтом времени события при изменении", exception.getMessage());
     }
 
     @ExceptionHandler(ValidationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleValidationException(ValidationException exception) {
-        String nowTime = LocalDateTime.now().format(FORMATTER);
         HttpStatus status = HttpStatus.BAD_REQUEST;
-        return getErrorResponse(status,
-                "Исключение, связанное  валидацией данных", exception.getMessage(), nowTime);
+        return getErrorResponse(status, "Исключение, связанное  валидацией данных", exception.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleIllegalArgumentException(IllegalArgumentException exception) {
-        String nowTime = LocalDateTime.now().format(FORMATTER);
         HttpStatus status = HttpStatus.CONFLICT;
-        return getErrorResponse(status,
-                "Исключение, связанное с неизвестным значением аргумента", exception.getMessage(), nowTime);
+        return getErrorResponse(status, "Исключение, связанное с неизвестным значением аргумента", exception.getMessage());
     }
 
     @ExceptionHandler(ConditionsNotMetException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleIllegalArgumentException(ConditionsNotMetException exception) {
-        String nowTime = LocalDateTime.now().format(FORMATTER);
         HttpStatus status = HttpStatus.CONFLICT;
-        return getErrorResponse(status,
-                "Исключение, связанное с неизвестным значением аргумента", exception.getMessage(), nowTime);
+        return getErrorResponse(status, "Исключение, связанное с неизвестным значением аргумента", exception.getMessage());
     }
 
-    private ErrorResponse getErrorResponse(HttpStatus status, String reason, String message,
-                                                            String timestamp) {
+    private ErrorResponse getErrorResponse(HttpStatus status, String reason, String message) {
         return ErrorResponse.builder()
                 .status(status.name())
                 .reason(reason)
                 .message(message)
-                .timestamp(timestamp)
+                .timestamp(LocalDateTime.now().format(FORMATTER))
                 .build();
     }
 

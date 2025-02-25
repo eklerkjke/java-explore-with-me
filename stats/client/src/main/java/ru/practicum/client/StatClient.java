@@ -18,7 +18,7 @@ import ru.practicum.dto.HitDto;
 public class StatClient {
     private final RestTemplate restTemplate;
 
-    @Value("${client.url}")
+    @Value("${stat-server.url}")
     private String serverUrl;
 
     @Autowired
