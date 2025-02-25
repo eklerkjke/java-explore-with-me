@@ -90,5 +90,5 @@ CREATE TABLE IF NOT EXISTS comments (
     event_id BIGINT NOT NULL,
     text TEXT NOT NULL,
     user_id BIGINT NOT NULL,
-    timestamp TIMESTAMP NOT NULL,
+    timestamp TIMESTAMP NOT NULL
 );
