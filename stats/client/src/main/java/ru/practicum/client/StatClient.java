@@ -34,6 +34,8 @@ public class StatClient {
 
         ResponseEntity<Object> response;
         try {
+            log.info("Процесс сохранения...");
+
             response = restTemplate.postForEntity(serverUrl + "/hit", hitDto, Object.class);
             log.info("Успешное сохранение статистики");
         } catch (HttpStatusCodeException exception) {
