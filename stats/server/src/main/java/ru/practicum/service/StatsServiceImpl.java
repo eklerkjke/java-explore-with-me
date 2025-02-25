@@ -1,6 +1,7 @@
 package ru.practicum.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.dto.HitDto;
 import ru.practicum.dto.StatsDto;
@@ -14,6 +15,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class StatsServiceImpl implements StatsService {
 
     private final StatsMapper statsMapper;
@@ -21,6 +23,7 @@ public class StatsServiceImpl implements StatsService {
 
     @Override
     public StatsDto saveRequest(HitDto hitDto) {
+        log.info("Сохранение запроса со статистикой в приложении статистики: {}", hitDto);
         Stats stat = statsMapper.toEntity(hitDto);
         return statsMapper.toDto(statRepository.save(stat));
     }
@@ -34,18 +37,26 @@ public class StatsServiceImpl implements StatsService {
             throw new BadTimeException("The end date cannot be earlier than the start date");
         }
 
+        log.info("Получение статистики по параметрам: {}, {}, {}, {}", start, end, uris, unique);
+
+        List<StatsDto> list;
+
         if (uris.isEmpty()) {
             if (unique) {
-                return statRepository.getStatsWithoutUriWithUniqueIp(start, end);
+                list = statRepository.getStatsWithoutUriWithUniqueIp(start, end);
             } else {
-                return statRepository.getStatsWithoutUri(start, end);
+                list = statRepository.getStatsWithoutUri(start, end);
             }
         } else {
             if (unique) {
-                return statRepository.getStatWithUriWithUniqueIp(start, end, uris);
+                list = statRepository.getStatWithUriWithUniqueIp(start, end, uris);
             } else {
-                return statRepository.getStatsWithUri(start, end, uris);
+                list = statRepository.getStatsWithUri(start, end, uris);
             }
         }
+
+        log.info("Статистика для запроса: {}", list);
+
+        return list;
     }
 }

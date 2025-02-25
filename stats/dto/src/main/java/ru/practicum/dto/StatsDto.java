@@ -19,5 +19,5 @@ public class StatsDto {
     private String uri;
 
     @PositiveOrZero(message = "hits не должен быть отрицательным")
-    private long hits;
+    private Long hits;
 }
