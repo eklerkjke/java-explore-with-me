@@ -7,6 +7,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.category.service.CategoryService;
+import ru.practicum.client.StatClient;
+import ru.practicum.dto.HitDto;
 import ru.practicum.event.dto.*;
 import ru.practicum.event.mapper.EventMapper;
 import ru.practicum.event.mapper.LocationMapper;
@@ -20,6 +22,7 @@ import ru.practicum.exception.ConflictTimeException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidationException;
 import ru.practicum.user.service.UserService;
+import ru.practicum.util.Constants;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -37,6 +40,7 @@ public class EventServiceImpl implements EventService {
     private final EventMapper eventMapper;
     private final LocationMapper locationMapper;
     private final EventSpecification eventSpecification;
+    private final StatClient statClient;
 
     @Transactional
     @Override
@@ -181,8 +185,10 @@ public class EventServiceImpl implements EventService {
                 ),
                 pageRequest
         );
-
         viewService.saveViews(events, request);
+
+        statClient.hit(new HitDto(Constants.MAIN_SERVICE_NAME, request.getRequestURI(), request.getRemoteAddr(),
+                LocalDateTime.now()));
 
         return eventMapper.toEventShortDto(events);
     }
@@ -198,6 +204,10 @@ public class EventServiceImpl implements EventService {
         }
 
         viewService.saveView(event, request);
+
+        statClient.hit(new HitDto(Constants.MAIN_SERVICE_NAME, request.getRequestURI(), request.getRemoteAddr(),
+                LocalDateTime.now()));
+
         return eventMapper.toEventFullDto(event);
     }
 

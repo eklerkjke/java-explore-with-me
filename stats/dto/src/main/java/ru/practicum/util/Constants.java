@@ -7,4 +7,6 @@ public class Constants {
     public static final String REQ_PARAM_SIZE = "size";
     public static final String DEFAULT_PAGE_FROM = "0";
     public static final String DEFAULT_PAGE_SIZE = "10";
+
+    public static final String MAIN_SERVICE_NAME = "ewm-main-service";
 }
