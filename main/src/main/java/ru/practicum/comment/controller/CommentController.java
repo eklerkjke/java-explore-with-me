@@ -9,6 +9,7 @@ import ru.practicum.comment.dto.CommentDto;
 import ru.practicum.comment.dto.NewCommentDto;
 import ru.practicum.comment.dto.UpdateCommentDto;
 import ru.practicum.comment.service.CommentService;
+import ru.practicum.util.Constants;
 
 import java.util.List;
 
@@ -23,8 +24,8 @@ public class CommentController {
     @ResponseStatus(HttpStatus.OK)
     public List<CommentDto> getCommentsEvent(
             @PathVariable(name = "eventId") Long eventId,
-            @RequestParam(defaultValue = "0", name = "from") Integer from,
-            @RequestParam(defaultValue = "10", name = "size") Integer size
+            @RequestParam(defaultValue = Constants.DEFAULT_PAGE_FROM, name = Constants.REQ_PARAM_FROM) Integer from,
+            @RequestParam(defaultValue = Constants.DEFAULT_PAGE_SIZE, name = Constants.REQ_PARAM_SIZE) Integer size
     ) {
         return commentService.getCommentsEvent(eventId, from, size);
     }
@@ -32,8 +33,8 @@ public class CommentController {
     @GetMapping("/user/{userId}")
     public List<CommentDto> getCommentsUser(
             @PathVariable(name = "userId") Long userId,
-            @RequestParam(defaultValue = "0", name = "from") Integer from,
-            @RequestParam(defaultValue = "10", name = "size") Integer size
+            @RequestParam(defaultValue = Constants.DEFAULT_PAGE_FROM, name = Constants.REQ_PARAM_FROM) Integer from,
+            @RequestParam(defaultValue = Constants.DEFAULT_PAGE_SIZE, name = Constants.REQ_PARAM_SIZE) Integer size
     ) {
         return commentService.getCommentsUser(userId, from, size);
     }

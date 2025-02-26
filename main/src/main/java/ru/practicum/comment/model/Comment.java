@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import ru.practicum.event.model.Event;
 import ru.practicum.user.model.User;
+import ru.practicum.util.Constants;
 
 import java.time.LocalDateTime;
 
@@ -12,7 +13,6 @@ import java.time.LocalDateTime;
 @Setter
 @Builder
 @ToString
-@EqualsAndHashCode(of = "id")
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -38,6 +38,6 @@ public class Comment {
     private User user;
 
     @Column(name = "timestamp")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = Constants.JSON_DATE_FORMAT)
     private LocalDateTime timestamp;
 }

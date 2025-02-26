@@ -2,15 +2,14 @@ package ru.practicum.comment.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class UpdateCommentDto {
 
     @NotBlank(message = "Единственный параметр не может быть пустым или null")
