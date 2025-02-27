@@ -15,11 +15,11 @@ import java.time.LocalDateTime;
 public class NewCommentDto {
     @NotBlank(message = "Единственный параметр не может быть пустым или null")
     @Size(max = 5000, min = 20, message = "Текст комментария должен содержать от 20 до 5000 символов")
-    private String text;
+    String text;
 
-    private Long userId;
+    Long userId;
 
-    private Long eventId;
+    Long eventId;
 
-    private LocalDateTime timestamp;
+    LocalDateTime timestamp;
 }

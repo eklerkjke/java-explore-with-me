@@ -14,13 +14,13 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CommentDto {
 
-    private Long id;
+    Long id;
 
-    private EventShortDto event;
+    EventShortDto event;
 
-    private String text;
+    String text;
 
-    private UserShortDto user;
+    UserShortDto user;
 
-    private LocalDateTime timestamp;
+    LocalDateTime timestamp;
 }
